@@ -25,17 +25,28 @@ MongoClient.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     try {
-        const user = await db.collection('Users').findOne({ 'user.name': username });
-        if (user && user.user.password === password) {
-            res.status(200).json({ success: true });
+        // Debugging: Log received username and password
+        console.log('Received username:', username);
+        console.log('Received password:', password);
+
+        // Query the database for a user document matching the provided username
+        const foundUser = await db.collection('Users').findOne({ 'user.name': username });
+
+        if (foundUser && foundUser.user.password === password) {
+            // Debugging: Log the retrieved user document
+            console.log('Retrieved user document:', foundUser);
+
+            // Send the entire user document in the response
+            res.status(200).json({ success: true, userDocument: foundUser });
         } else {
             res.status(401).json({ success: false, message: 'Invalid username or password' });
         }
     } catch (error) {
-        console.error(error);
+        console.error('Server error:', error);
         res.status(500).json({ success: false, message: 'An error occurred' });
     }
 });
+
 
 // Signup endpoint
 // In your Express route
