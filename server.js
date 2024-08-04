@@ -25,18 +25,13 @@ MongoClient.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     try {
-        // Debugging: Log received username and password
         console.log('Received username:', username);
         console.log('Received password:', password);
 
-        // Query the database for a user document matching the provided username
         const foundUser = await db.collection('Users').findOne({ 'user.name': username });
 
         if (foundUser && foundUser.user.password === password) {
-            // Debugging: Log the retrieved user document
             console.log('Retrieved user document:', foundUser);
-
-            // Send the entire user document in the response
             res.status(200).json({ success: true, userDocument: foundUser });
         } else {
             res.status(401).json({ success: false, message: 'Invalid username or password' });
@@ -47,9 +42,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
-
 // Signup endpoint
-// In your Express route
 app.post('/signup', async (req, res) => {
     const { username, email, phone, age, password, confirmPassword } = req.body;
 
@@ -80,6 +73,36 @@ app.post('/signup', async (req, res) => {
         res.status(500).json({ success: false, message: 'An error occurred' });
     }
 });
+
+// Get users by usernames endpoint
+app.post('/get-users', async (req, res) => {
+    const { usernames } = req.body;
+
+    if (!Array.isArray(usernames) || usernames.length === 0) {
+        return res.status(400).json({ success: false, message: 'No usernames provided' });
+    }
+
+    try {
+        // Query the database for documents where the user.name is in the list of usernames
+        const users = await db.collection('Users').find(
+            { 'user.name': { $in: usernames } },
+            { projection: { 'user.posts': 1, _id: 0 } } // Only include the posts field in the result
+        ).toArray();
+
+        // Map the results to only include the posts from each user
+        const postsList = users.map(user => user.user.posts).flat(); // Flatten the array of posts
+
+        if (postsList.length > 0) {
+            res.status(200).json({ success: true, posts: postsList });
+        } else {
+            res.status(404).json({ success: false, message: 'No posts found' });
+        }
+    } catch (error) {
+        console.error('Server error:', error);
+        res.status(500).json({ success: false, message: 'An error occurred' });
+    }
+});
+
 
 
 app.listen(port, () => {
