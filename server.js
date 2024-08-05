@@ -32,6 +32,10 @@ const userSchema = new mongoose.Schema({
   user: {
     name: String,
     password: String,
+    email: String,
+    phone: String,
+    age: String,
+    profile_picture: String, // Add profile_picture field
     messageDataList: Array,
     following: Array,
     posts: [{
@@ -46,7 +50,7 @@ const userSchema = new mongoose.Schema({
 
 const UserModel = mongoose.model('User', userSchema);
 
-// Set up multer for file uploads
+// Set up multer for file uploads (not used in this case, but could be if you handle file uploads differently)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadPath = path.join(__dirname, 'uploads');
@@ -79,7 +83,7 @@ app.post('/login', async (req, res) => {
 
 // Signup endpoint
 app.post('/signup', async (req, res) => {
-  const { username, email, phone, age, password, confirmPassword } = req.body;
+  const { username, email, phone, age, password, confirmPassword, profilePicture } = req.body;
 
   if (password !== confirmPassword) {
     return res.status(400).json({ success: false, message: 'Passwords do not match' });
@@ -97,7 +101,8 @@ app.post('/signup', async (req, res) => {
         email: email,
         phone: phone,
         age: age,
-        password: password
+        password: password,
+        profile_picture: profilePicture // Save the Base64 string here
       }
     };
 
