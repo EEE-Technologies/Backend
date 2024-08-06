@@ -5,6 +5,7 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
 
 // Create an instance of Express
 const app = express();
@@ -12,10 +13,16 @@ const port = 3000;
 const uri = 'mongodb://localhost:27017'; // Change this to your MongoDB URI
 const dbName = 'Raytio'; // Change this to your database name
 
-// Middleware to parse JSON requests
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cors()); // Enable CORS for all routes
+// Middleware to parse JSON requests with increased limits
+app.use(bodyParser.json({ limit: '1000mb' })); // Increase the limit as needed
+app.use(bodyParser.urlencoded({ extended: true, limit: '1000mb' })); // Increase the limit as needed
+
+// Enable CORS for all routes
+app.use(cors({
+  origin: '*', // Replace this with your actual origin in production
+  methods: 'GET,POST,PUT,DELETE',
+  allowedHeaders: 'Content-Type,Authorization'
+}));
 
 // Connect to MongoDB
 mongoose.connect(`${uri}/${dbName}`, {
@@ -145,6 +152,10 @@ app.post('/get-users', async (req, res) => {
 app.post('/uploadPost', async (req, res) => {
   const postToAdd = req.body;
 
+  if (!postToAdd.username || !postToAdd.title || !postToAdd.description) {
+    return res.status(400).json({ success: false, message: 'Missing required fields' });
+  }
+
   try {
     const result = await UserModel.findOneAndUpdate(
       { "user.name": postToAdd.username },
@@ -153,17 +164,23 @@ app.post('/uploadPost', async (req, res) => {
     );
 
     if (result) {
-      res.send('Post added to user successfully.');
+      res.status(200).json({ success: true, message: 'Post added to user successfully.' });
     } else {
-      res.status(404).send('User not found.');
+      res.status(404).json({ success: false, message: 'User not found.' });
     }
   } catch (error) {
     console.error('Error adding post:', error);
-    res.status(500).send('Error adding post.');
+    res.status(500).json({ success: false, message: 'Error adding post.' });
   }
 });
 
+// Create HTTP server with custom options
+const serverOptions = {
+  maxHeaderSize: 500 * 1024 * 1024 // 500 MB
+};
+const server = http.createServer(serverOptions, app);
+
 // Start the server
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
