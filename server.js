@@ -14,8 +14,8 @@ const uri = 'mongodb://localhost:27017'; // Change this to your MongoDB URI
 const dbName = 'Raytio'; // Change this to your database name
 
 // Middleware to parse JSON requests with increased limits
-app.use(bodyParser.json({ limit: '1000mb' })); // Increase the limit as needed
-app.use(bodyParser.urlencoded({ extended: true, limit: '1000mb' })); // Increase the limit as needed
+app.use(bodyParser.json({ limit: '15000mb' })); // Increase the limit as needed
+app.use(bodyParser.urlencoded({ extended: true, limit: '15000mb' })); // Increase the limit as needed
 
 // Enable CORS for all routes
 app.use(cors({
@@ -176,7 +176,7 @@ app.post('/uploadPost', async (req, res) => {
 
 // Create HTTP server with custom options
 const serverOptions = {
-  maxHeaderSize: 500 * 1024 * 1024 // 500 MB
+  maxHeaderSize: 5000 * 1024 * 1024 // 500 MB
 };
 const server = http.createServer(serverOptions, app);
 
