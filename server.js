@@ -174,6 +174,51 @@ app.post('/uploadPost', async (req, res) => {
   }
 });
 
+
+// Endpoint to get all user names and profile pictures
+app.get('/api/get-search-results-username', async (req, res) => {
+  try {
+    const users = await UserModel.find({}, 'user.name user.profile_picture').exec(); // Retrieve 'user.name' and 'user.profile_picture' fields
+    const results = users.map(user => ({
+      name: user.user.name,
+      profile_picture: user.user.profile_picture || null  // Use 'none' if profile_picture is not available
+    }));
+    res.status(200).json({ success: true, users: results }); // Send results as JSON response
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Create HTTP server with custom options
 const serverOptions = {
   maxHeaderSize: 5000 * 1024 * 1024 // 500 MB
