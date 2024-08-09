@@ -190,28 +190,22 @@ app.get('/api/get-search-results-username', async (req, res) => {
   }
 });
 
+// Endpoint to search for a user by name
+app.get('/api/get-user-by-name/:name', async (req, res) => {
+  const userName = req.params.name;
+  try {
+    const user = await UserModel.findOne({ 'user.name': userName });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    if (user) {
+      res.status(200).json({ success: true, user });
+    } else {
+      res.status(404).json({ success: false, message: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+});
 
 
 
