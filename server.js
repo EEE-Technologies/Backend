@@ -174,7 +174,6 @@ app.post('/uploadPost', async (req, res) => {
   }
 });
 
-
 // Endpoint to get all user names and profile pictures
 app.get('/api/get-search-results-username', async (req, res) => {
   try {
@@ -207,11 +206,32 @@ app.get('/api/get-user-by-name/:name', async (req, res) => {
   }
 });
 
+// New Endpoint to add a user to the following list
+app.post('/api/add-following', async (req, res) => {
+  const { username, newFollowing } = req.body;
 
+  try {
+    // Find the user by their name and update their following array
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { 'user.name': username },
+      { $addToSet: { 'user.following': newFollowing } }, // $addToSet avoids duplicates
+      { new: true }
+    );
 
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
 
-
-
+    res.status(200).json({
+      success: true,
+      message: 'Following list updated successfully',
+      updatedFollowing: updatedUser.user.following
+    });
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+});
 
 // Create HTTP server with custom options
 const serverOptions = {
