@@ -233,6 +233,40 @@ app.post('/api/add-following', async (req, res) => {
   }
 });
 
+// Add an object to user's messageDataList endpoint
+app.post('/api/add-message-to-user', async (req, res) => {
+  const { username, messageData } = req.body;
+
+  if (!username || !messageData || 
+      typeof messageData !== 'object' || 
+      !messageData.avatar || 
+      !messageData.username || 
+      !messageData.preview || 
+      !Array.isArray(messageData.messagesJson)) {
+    return res.status(400).json({ success: false, message: 'Invalid input data' });
+  }
+
+  try {
+    // Update the user's messageDataList array by adding the new messageData object
+    const result = await UserModel.findOneAndUpdate(
+      { 'user.name': username },
+      { $push: { 'user.messageDataList': messageData } }, // Use $push to add the messageData
+      { new: true, useFindAndModify: false }
+    );
+
+    if (result) {
+      res.status(200).json({ success: true, message: 'Message data added to user successfully.', user: result });
+    } else {
+      res.status(404).json({ success: false, message: 'User not found.' });
+    }
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ success: false, message: 'Server error.' });
+  }
+});
+
+
+
 // Create HTTP server with custom options
 const serverOptions = {
   maxHeaderSize: 5000 * 1024 * 1024 // 500 MB
