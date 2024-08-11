@@ -266,6 +266,64 @@ app.post('/api/add-message-to-user', async (req, res) => {
 });
 
 
+// Endpoint to handle message exchange between users
+app.post('/api/add-message', async (req, res) => {
+  const { sender, receiver, message } = req.body;
+
+  console.log("Received request body:", req.body);
+
+  // Validate the input data
+  if (!sender || typeof sender !== 'string') {
+    console.log("Invalid or missing sender:", sender);
+    return res.status(400).json({ success: false, message: 'Invalid sender' });
+  }
+
+  if (!receiver || typeof receiver !== 'string') {
+    console.log("Invalid or missing receiver:", receiver);
+    return res.status(400).json({ success: false, message: 'Invalid receiver' });
+  }
+
+  if (!message || typeof message !== 'object' || !message.text || typeof message.text !== 'string') {
+    console.log("Invalid or missing message:", message);
+    return res.status(400).json({ success: false, message: 'Invalid message' });
+  }
+
+  const sentMessage = { type: 'sent', text: message.text };
+  const receivedMessage = { type: 'received', text: message.text };
+
+  try {
+    const senderUpdate = await UserModel.findOneAndUpdate(
+      { 'user.name': sender, 'user.messageDataList.username': receiver },
+      { $push: { 'user.messageDataList.$.messagesJson': sentMessage } },
+      { new: true }
+    );
+
+    if (!senderUpdate) {
+      console.log("Sender or messageDataList item not found:", sender, receiver);
+      return res.status(404).json({ success: false, message: 'Sender or messageDataList item not found.' });
+    }
+
+    const receiverUpdate = await UserModel.findOneAndUpdate(
+      { 'user.name': receiver, 'user.messageDataList.username': sender },
+      { $push: { 'user.messageDataList.$.messagesJson': receivedMessage } },
+      { new: true }
+    );
+
+    if (!receiverUpdate) {
+      console.log("Receiver or messageDataList item not found:", receiver, sender);
+      return res.status(404).json({ success: false, message: 'Receiver or messageDataList item not found.' });
+    }
+
+    res.status(200).json({ success: true, message: 'Messages added to both sender and receiver successfully.' });
+  } catch (error) {
+    console.error('Error updating message data:', error);
+    res.status(500).json({ success: false, message: 'Server error occurred.' });
+  }
+});
+
+
+
+
 
 // Create HTTP server with custom options
 const serverOptions = {
